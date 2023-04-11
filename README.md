@@ -21,15 +21,15 @@ yum install wget
 ```
 FOR CENTOS 7
 ```
-bash spi -rhel7
+bash cmd -rhel7
 ```
 FOR CENTOS 6
 ```
-bash spi -rhel6
+bash cmd -rhel6
 ```
 FOR CENTOS 5
 ```
-bash spi -rhel5
+bash cmd -rhel5
 ```
 # All Done, You Are Good to Go!
 
