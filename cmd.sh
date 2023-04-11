@@ -1,121 +1,292 @@
 #!/bin/bash
 
-# Enter the username
-username=""
-while [[ $username = "" ]]; do
-    echo "Enter the proxy username"
-    read -p "username: " username
-    if [ -z "$username" ]; then
-      echo "The username cannot be empty"
-    else
-        # Check if user already exists.
-        grep -wq "$username" /etc/passwd
-        if [ $? -eq 0 ]
-            then
-            echo "User $username already exists"
-            username=
-        fi
-    fi
-done
+############################################################################
+# Squid Proxy Installer (SPI)                                              #
+# Version: 2.0 Build 2017                                                  #
+# Branch: Stable                                                           #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Author: Hidden Refuge (© 2014 - 2017)                                    #
+# Modified for me: Icharis, Thanks to hidden-refuge for leading the    #
+# way.	and thanks to ADHD-- copied from his repo           		   #
+# License: MIT License                                                     #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# GitHub Repo: https://github.com/hidden-refuge/spi/                       #
+# SPI Wiki: https://github.com/hidden-refuge/spi/wiki                      #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Modified GitHub Repo: https://github.com/i-hacker/proxy                      #
+# Dev Contact: https://telegram.dog/ibabahacker                    #
+############################################################################
 
-# Enter the proxy user password
-password=""
-while [[ $password = "" ]]; do
-    echo "Enter the proxy password"
-    read -p "password: " password
-    if [ -z "$password" ]; then
-        echo "Password cannot be empty"
-    fi
-done
+# Declaring a few misc variables
+vspiversion=5.0 # SPI version
+vspibuild=2023 # SPI build number
+vbranch=Stable # SPI build branch
+vsysarch=$(getconf LONG_BIT) # System architecture
 
-# Install squid3, wget and apache2-utils for htpasswd
-apt install squid3 wget apache2-utils
+# Function for iptables rules (CentOS 5 & 6)
+firew1 ()	{
+	# Opening default Squid port 3128 for clients to connect
+	iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+	# Saving firewall rules
+	service iptables save
+}
 
-# determine default int
-default_int="$(ip route list |grep default |grep -o -P '\b[a-z]+\d+\b')" #Because net-tools in debian, ubuntu are obsolete already
-# determine external ip
-external_ip="$(wget ipinfo.io/ip -q -O -)"
+# Function for iptables rules (CentOS 7, Debian, Ubuntu, Fedora)
+firew2 ()	{
+	# Opening default Squid port 3128 for clients to connect
+	iptables -I INPUT -p tcp --dport 3128 -j ACCEPT
+	# Saving firewall rules
+	iptables-save
+}
 
+# Function for RHEL 5 Linux distributions
+rhel5 ()	{
+	# Downloading and installing necessary repo for newer Squid 3 versions for CentOS 5
+	rpm -Uvh http://flexbox.sourceforge.net/centos/5/i386/flexbox-release-1-4.3.noarch.rpm
+	# Installing necessary packages (Squid, httpd for htpasswd and dependencies)
+	yum install perl-DBI libecap squid httpd -y
+	# Asking user to set a username via read and writing it into $usrn
+	read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	htpasswd -c /etc/squid/passwd $usrn
+	# Downloading necessary Squid.conf for the corresponding OS & system architecture
+	case $vsysarch in
+			32) # 32 bit Squid configuration
+					wget -O /etc/squid/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-rhel5632.conf --no-check-certificate;;
+			64) # 64 bit Squid configuration
+					wget -O /etc/squid/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-rhel5664.conf --no-check-certificate;;
+	esac
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid/blacklist.acl
+	# Restarting Squid and enabling its service
+	service squid restart && chkconfig squid on
+	# Turning off httpd and removing it from services (post installation of yum enabled it but we don't need it)
+	service httpd stop && chkconfig httpd off
+	# Running function firew1
+	firew1
+}
 
+# Function for RHEL 6 Linux distributions
+rhel6 ()	{
+	# Installing necessary packages (Squid, httpd-tools for htpasswd and dependencies)
+	yum install squid httpd-tools -y
+	# Asking user to set a username via read and writing it into $usrn
+	read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	htpasswd -c /etc/squid/passwd $usrn
+	# Downloading necessary Squid.conf for the corresponding OS & system architecture
+	case $vsysarch in
+			32) # 32 bit Squid configuration
+					wget -O /etc/squid/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-rhel5632.conf --no-check-certificate;;
+			64) # 64 bit Squid configuration
+					wget -O /etc/squid/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-rhel5664.conf --no-check-certificate;;
+	esac
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid/blacklist.acl
+	# Restarting Squid and enabling its service
+	service squid restart && chkconfig squid on
+	# Running function firew1
+	firew1	
+}
 
-# add user for squid
-# avoid rewrite users
-touch /etc/squid/passwords
-# Set user and pass
-htpasswd -ib /etc/squid/passwords $username $password
+# Function for RHEL 7 Linux distributions
+rhel7 ()	{
+	# Installing necessary packages (Squid, httpd-tools for htpasswd and dependencies)
+	yum install nano dos2unix squid httpd-tools -y
+	# Asking user to set a username via read and writing it into $usrn
+	read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	htpasswd -c /etc/squid/passwd $usrn
+	# Downloading Squid configuration 
+	wget -O /etc/squid/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-rhel7.conf --no-check-certificate
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid/blacklist.acl
+	# Restarting Squid and enabling its service
+	systemctl restart squid.service && systemctl enable squid.service
+	# Running function firew2
+	firew2
+}
 
-# Squid configuration
-cat <<EOT > /etc/squid/squid.conf
-#Auth
-auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwords
-acl ncsa_users proxy_auth REQUIRED
+# Function for Debian "Squeeze" 6 and Debian "Wheezy" 7
+deb ()	{
+	# Updating package database
+	apt-get update
+	# Installing necessary packages (Squid, apache2-utils for htpassword and dependencies)
+	apt-get install apache2-utils squid3 -y
+	# Asking user to set a username via read and writing it into $usrn
+	read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	htpasswd -c /etc/squid3/passwd $usrn
+	# Downloading Squid configuration
+	wget -O /etc/squid3/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-debian.conf --no-check-certificate
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid3/blacklist.acl
+	# Restarting Squid and enabling its service
+	service squid3 restart && update-rc.d squid3 defaults
+	# Running function firew2
+	firew2
+}
 
-#Recommended minimum configuration:
-dns_v4_first on
-acl manager proto cache_object
-acl localhost src 127.0.0.1/32
-acl to_localhost dst 127.0.0.0/8 # systemctl status squid.service after installation squid and danted by this script
-                                 # WARNING: because of this '127.0.0.0/8' is ignored to keep splay tree searching predictable
-                                 # WARNING: You should probably remove '127.0.0.0/8' from the ACL named 'to_localhost'
-acl localnet src 0.0.0.0/8 192.168.100.0/24 192.168.101.0/24
-acl SSL_ports port 443
-acl Safe_ports port 80      # http
-acl Safe_ports port 21        # ftp
-acl Safe_ports port 443        # https
-acl Safe_ports port 70        # gopher
-acl Safe_ports port 210        # wais
-acl Safe_ports port 1025-65535    # unregistered ports
-acl Safe_ports port 280        # http-mgmt
-acl Safe_ports port 488        # gss-http
-acl Safe_ports port 591        # filemaker
-acl Safe_ports port 777        # multiling http
+# Function for Debian "Jessie" 8
+deb8 ()	{
+	# Updating package database
+	apt-get update
+	# Installing necessary packages (Squid, apache2-utils for htpassword and dependencies)
+	apt-get install apache2-utils squid3 -y
+	# Asking user to set a username via read and writing it into $usrn
+	read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	htpasswd -c /etc/squid3/passwd $usrn
+	# Downloading Squid configuration
+	wget -O /etc/squid3/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-jessie.conf --no-check-certificate
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid3/blacklist.acl
+	# Restarting Squid and enabling its service
+	service squid3 restart && update-rc.d squid3 defaults
+	# Running function firew2
+	firew2
+}
 
-acl CONNECT method CONNECT
+# Function for Ubuntu User Auth
+ubt ()	{
+	# Updating package database
+	apt-get update
+	# Installing necessary packages (Squid, apache2-utils for htpassword and dependencies)
+	apt-get install nano dos2unix apache2-utils squid3 -y
+	# Asking user to set a username via read and writing it into $usrn
+	read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	htpasswd -c /etc/squid3/passwd $usrn
+	# Downloading Squid configuration
+	wget -O /etc/squid3/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-ubuntu.conf --no-check-certificate
+	# Copying squid3.conf from init to init.d for startup script
+	cp /etc/init/squid3.conf /etc/init.d/squid3
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid3/blacklist.acl	
+	# Restarting Squid and enabling its service
+	service squid3 restart && update-rc.d squid3 defaults
+	# Running function firew2
+	firew2
+}
 
-http_access allow manager localhost
-http_access deny manager
-http_access deny !Safe_ports
+# Function for Ubuntu Ip Auth
+ubt_ip ()	{
+	# Updating package database
+	apt-get update
+	# Installing necessary packages (Squid, apache2-utils for htpassword and dependencies)
+	apt-get install nano dos2unix apache2-utils squid3 -y
+	# Asking user to set a username via read and writing it into $usrn
+	# read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	# htpasswd -c /etc/squid3/passwd $usrn
+	# Downloading Squid configuration
+	wget -O /etc/squid3/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-ubuntu_ip_auth.conf --no-check-certificate
+	# Copying squid3.conf from init to init.d for startup script
+	cp /etc/init/squid3.conf /etc/init.d/squid3
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid3/blacklist.acl
+	# Restarting Squid and enabling its service
+	service squid3 restart && update-rc.d squid3 defaults
+	# Running function firew2
+	firew2
+}
 
-http_access deny to_localhost
-icp_access deny all
-htcp_access deny all
+# Function for Ubuntu No Auth
+ubt_null ()	{
+	# Updating package database
+	apt-get update
+	# Installing necessary packages (Squid, apache2-utils for htpassword and dependencies)
+	apt-get install nano dos2unix apache2-utils squid3 -y
+	# Asking user to set a username via read and writing it into $usrn
+	# read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	# htpasswd -c /etc/squid3/passwd $usrn
+	# Downloading Squid configuration
+	wget -O /etc/squid3/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-ubuntu_no_auth.conf --no-check-certificate
+	# Copying squid3.conf from init to init.d for startup script
+	cp /etc/init/squid3.conf /etc/init.d/squid3
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid3/blacklist.acl
+	# Restarting Squid and enabling its service
+	service squid3 restart && update-rc.d squid3 defaults
+	# Running function firew2
+	firew2
+}
 
-http_port 5515
-hierarchy_stoplist cgi-bin ? # systemctl status squid.service after installation squid and danted by this script
-                             # ERROR: Directive 'hierarchy_stoplist' is obsolete.
-access_log /var/log/squid/access.log squid
+# Function for Fedora
+fed () {
+	# Installing necessary packages (Squid, httpd-tools for htpasswd and dependencies)
+	yum install squid httpd-tools -y
+	# Asking user to set a username via read and writing it into $usrn
+	read -e -p "Your desired username: " usrn
+	# Creating user with username from $usrn and asking user to set a password
+	htpasswd -c /etc/squid/passwd $usrn
+	# Downloading necessary Squid.conf for the corresponding OS & system architecture
+	case $vsysarch in
+		32) # 32 bit Squid configuration
+			wget -O /etc/squid/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-fedora32.conf --no-check-certificate;;
+		64) # 64 bit Squid configuration
+			wget -O /etc/squid/squid.conf https://raw.githubusercontent.com/i-hacker/proxy/main/spi-rhel7.conf --no-check-certificate;;
+	esac
+	# Creating empty blacklist.acl file for further blacklisting entries
+	touch /etc/squid/blacklist.acl
+	# Restarting Squid and enabling its service
+	systemctl restart squid && systemctl enable squid
+	# Running function firew2
+	firew2
+}
 
+# Default function with information
+dinfo ()	{
+	echo "Squid Proxy Installer $vspiversion Build $vspibuild"
+	echo "You are using builds from the $vbranch branch"
+	echo ""
+	echo "Usage: bash spi <option>"
+	echo "Example (Debian 8): bash spi -jessie"
+	echo ""
+	echo "Options:"
+	echo "-rhel5   -- RHEL 5 Linux distributions such as Red Hat 5, CentOS 5 and et cetera"
+	echo "-rhel6   -- RHEL 6 Linux distributions such as Red Hat 6, CentOS 6 and et cetera"
+	echo "-rhel7   -- RHEL 7 Linux distributions such as Red Hat 7, CentOS 7 and et cetera"
+	echo "-debian  -- Debian Squeeze 6 & Wheezy 7"
+	echo "-jessie  -- Debian Jessie 8"
+	echo "-ubuntu  -- Ubuntu"
+	echo "-fedora  -- Fedora"
+	echo ""
+	echo "For any query & question:"
+	echo "https://telegram.dog/ibabahacker"
+	echo "How to add more users:"
+	echo "https://github.com/hidden-refuge/spi/wiki/User-management"
+	echo ""
+	echo "How to blacklist domains:"
+	echo "https://github.com/hidden-refuge/spi/wiki/Domain-blacklist"
+	echo ""
+	echo ""
+	echo "(C) 2014 - 2017 by Hidden Refuge"
+	echo "GitHub Repo: https://github.com/hidden-refuge/spi"
+	echo "SPI Wiki: https://github.com/hidden-refuge/spi/wiki"
+}
 
-#Suggested default:
-refresh_pattern ^ftp:        1440    20%    10080
-refresh_pattern ^gopher:    1440    0%    1440
-refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
-refresh_pattern .        0    20%    4320
-# Leave coredumps in the first cache dir
-coredump_dir /var/spool/squid
-
-# Allow all machines to all sites
-http_access allow ncsa_users
-#http_access allow all
-
-#Headers
-via off
-forwarded_for off
-follow_x_forwarded_for deny all
-request_header_access X-Forwarded-For deny all
-header_access X_Forwarded_For deny all          # systemctl status squid.service after installation squid and danted by this script
-                                                # ERROR: Directive 'header_access' is obsolete.
-EOT
-systemctl restart squid.service
-
-
-
-#information
-echo "--------------------------------------------------------------------------------------------------"
-echo "--------------------------------------------------------------------------------------------------"
-echo "--------------------------------------------------------------------------------------------------"
-echo "Proxy IP: $external_ip"
-echo "HTTP port: 5515"
-
-echo "Username: $username"
-echo "Password: $password"
+# Checking $1 and running corresponding function
+case $1 in
+	'-rhel5') # If option "-rhel5" run function rhel5
+		rhel5;; # RHEL 5 Linux distributions such as Red Hat 5, CentOS 5 and et cetera
+	'-rhel6') # If option "-rhel6" run function rhel6
+		rhel6;; # RHEL 6 Linux distributions such as Red Hat 6, CentOS 6 and et cetera
+	'-rhel7') # If option "-rhel7" run function rhel7
+		rhel7;;	# RHEL 7 Linux distributions such as Red Hat 7, CentOS 7 and et cetera
+	'-debian') # If option "-debian" run fuction deb
+		deb;; # Debian "Squeeze" 6 and Debian "Wheezy" 7
+	'-jessie') # If option "-jessie" run function deb8
+		deb8;; # Debian "Jessie" 8
+	'-ubuntu') # If option "-ubuntu" run function ubt
+		ubt;; # Ubuntu User
+	'-ubuntu_ip') # If option "-ubuntu_ip" run function ubt_ip
+		ubt_ip;; # Ubuntu Ip		
+	'-ubuntu_null') # If option "-ubuntu" run function ubt_null
+		ubt_null;; # Ubuntu	Null
+	'-fedora') # If option "fedora" run function fed
+		fed;; # Fedora 
+	*) # If option empty or non existing run function info
+		dinfo;; # Default, information about available options and et cetera
+esac
