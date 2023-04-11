@@ -1,10 +1,14 @@
-# Squid_Proxy on Debian/Ubuntu By IHACKER
+# A Simple Squid Proxy script that makes an HTTP/HTTPS Proxy Server on Centos/Debian/Ubuntu By IHACKER
+
+# Options & functionality
+
+Username and password authentication.<br />
+5515 Port for fast serve.<br />
+Available for CentOS 5, CentOS 6, CentOS 7 & Centos 8/Debian/Ubuntu.<br />
+Less code for fast deployment.<br />
+
 
 # How to Start Setup
-
-A simple Squid script that make an HTTP Proxy Server for you.
-
-
 
 HTTP/HTTPS PROXY (On Port 5515)
 
@@ -24,4 +28,5 @@ apt-get install curl -y
 bash <(curl -s "https://raw.githubusercontent.com/i-hacker/proxy/main/cmd.sh")
 ```
 
-Find me on Telegram @ibabahacker
+For more scripts like this find me on Telegram @ibabahacker
+Cloned from hidden-refuge/spi & modified the unnecessary squid config for fast & reliable deployment and destroy.<br />
