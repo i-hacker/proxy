@@ -6,7 +6,7 @@ A simple Squid script that make an HTTP Proxy Server for you.
 
 
 
-HTTP PROXY (On Port 5515)
+HTTP/HTTPS PROXY (On Port 5515)
 
 ```
 sudo su
