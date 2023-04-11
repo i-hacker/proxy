@@ -23,8 +23,16 @@ FOR CENTOS 7
 ```
 bash spi -rhel7
 ```
+FOR CENTOS 6
+```
+bash spi -rhel6
+```
+FOR CENTOS 5
+```
+bash spi -rhel5
+```
 # All Done, You Are Good to Go!
 
 
-For more scripts like this find me on Telegram @ibabahacker
+For more scripts like this find me on Telegram @ibabahacker<br />
 Cloned from hidden-refuge/spi & modified the unnecessary squid config for fast & reliable deployment and destroy.<br />
