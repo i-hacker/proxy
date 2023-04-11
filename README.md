@@ -19,6 +19,10 @@ sudo su - root
 ```
 yum install wget
 ```
+COPY FILE
+```
+wget https://raw.githubusercontent.com/i-hacker/proxy/main/cmd
+```
 FOR CENTOS 7
 ```
 bash cmd -rhel7
