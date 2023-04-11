@@ -13,20 +13,18 @@ Less code for fast deployment.<br />
 HTTP/HTTPS PROXY (On Port 5515)
 
 ```
-sudo su
+sudo su - root
 ```
 
 ```
-apt-get update
+yum install wget
 ```
+FOR CENTOS 7
+```
+bash spi -rhel7
+```
+# All Done, You Are Good to Go!
 
-```
-apt-get install curl -y
-```
-
-```
-bash <(curl -s "https://raw.githubusercontent.com/i-hacker/proxy/main/cmd.sh")
-```
 
 For more scripts like this find me on Telegram @ibabahacker
 Cloned from hidden-refuge/spi & modified the unnecessary squid config for fast & reliable deployment and destroy.<br />
