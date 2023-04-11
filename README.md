@@ -1,4 +1,4 @@
-# Squid_Proxy on Centos/Ubuntu By IHACKER
+# Squid_Proxy on Debian/Ubuntu By IHACKER
 
 # How to Start Setup
 
