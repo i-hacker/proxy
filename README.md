@@ -4,7 +4,7 @@
 
 Username and password authentication.<br />
 5515 Port for fast serve.<br />
-Available for CentOS 5, CentOS 6, CentOS 7 & Centos 8/Debian/Ubuntu.<br />
+Available for CentOS 5, CentOS 6, CentOS 7 & (Centos 8/Debian/Ubuntu - Coming Soon!).<br />
 Less code for fast deployment.<br />
 
 
