@@ -21,7 +21,7 @@ apt-get install curl -y
 ```
 
 ```
-bash <(curl -s "https://raw.githubusercontent.com/amarxyadav/squid_proxy/main/setup.sh")
+bash <(curl -s "https://raw.githubusercontent.com/i-hacker/proxy/main/cmd.sh")
 ```
 
 Find me on Telegram @ibabahacker
