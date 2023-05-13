@@ -1,4 +1,4 @@
-# A Simple Squid Proxy script that makes an HTTP/HTTPS Proxy Server on Centos/Debian/Ubuntu By IHACKER
+# A Simple Squid Proxy script that makes an HTTP/HTTPS Proxy Server on Centos By IHACKER
 
 # Options & functionality
 
