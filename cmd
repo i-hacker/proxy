@@ -46,7 +46,7 @@ rhel5 ()	{
 	# Installing necessary packages (Squid, httpd for htpasswd and dependencies)
 	yum install perl-DBI libecap squid httpd -y
 	# Asking user to set a username via read and writing it into $usrn
-	read -e -p "Your desired username: " usrn
+	read -e -p "Username: " usrn
 	# Creating user with username from $usrn and asking user to set a password
 	htpasswd -c /etc/squid/passwd $usrn
 	# Downloading necessary Squid.conf for the corresponding OS & system architecture
@@ -71,7 +71,7 @@ rhel6 ()	{
 	# Installing necessary packages (Squid, httpd-tools for htpasswd and dependencies)
 	yum install squid httpd-tools -y
 	# Asking user to set a username via read and writing it into $usrn
-	read -e -p "Your desired username: " usrn
+	read -e -p "Username: " usrn
 	# Creating user with username from $usrn and asking user to set a password
 	htpasswd -c /etc/squid/passwd $usrn
 	# Downloading necessary Squid.conf for the corresponding OS & system architecture
@@ -94,7 +94,7 @@ rhel7 ()	{
 	# Installing necessary packages (Squid, httpd-tools for htpasswd and dependencies)
 	yum install nano dos2unix squid httpd-tools -y
 	# Asking user to set a username via read and writing it into $usrn
-	read -e -p "Your desired username: " usrn
+	read -e -p "Username: " usrn
 	# Creating user with username from $usrn and asking user to set a password
 	htpasswd -c /etc/squid/passwd $usrn
 	# Downloading Squid configuration 
