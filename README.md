@@ -16,6 +16,7 @@ IHACKER PROXY CHECKER
 ```
 www.ihacker.in/proxy
 ```
+COMMAND LINES
 ```
 sudo su - root
 ```
@@ -30,6 +31,10 @@ wget https://raw.githubusercontent.com/i-hacker/proxy/main/cmd
 FOR CENTOS 7
 ```
 bash cmd -rhel7
+```
+COMMON PASSWORD
+```
+ifast
 ```
 FOR CENTOS 6
 ```
