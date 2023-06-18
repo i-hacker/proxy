@@ -12,6 +12,10 @@ Less code for fast deployment.<br />
 
 HTTP/HTTPS PROXY (On Port 5515)
 
+IHACKER PROXY CHECKER
+```
+www.ihacker.in/proxy
+```
 ```
 sudo su - root
 ```
