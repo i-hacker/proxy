@@ -14,7 +14,7 @@ HTTP/HTTPS PROXY (On Port 5515)
 
 IHACKER PROXY CHECKER
 ```
-www.ihacker.in/proxy
+https://ihacker.in/proxy
 ```
 COMMAND LINES
 ```
